@@ -1,6 +1,9 @@
 # recoverlite
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/heidihelena/recoverlite/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/heidihelena/recoverlite/actions/workflows/R-CMD-check.yaml)
+[![recoverlite status badge](https://heidihelena.r-universe.dev/badges/recoverlite)](https://heidihelena.r-universe.dev/recoverlite)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.md)
 <!-- badges: end -->
 
 **Pre-data recovery tests for planned study designs.**
@@ -32,14 +35,16 @@ strategies use `lme4` with `lmerTest` (Satterthwaite) and `pbkrtest`
 ## Installation
 
 ```r
-# not yet on CRAN; development version:
-# remotes::install_github("heidihelena/recoverlite")
+# from the r-universe (recommended):
+install.packages("recoverlite",
+                 repos = c("https://heidihelena.r-universe.dev",
+                           "https://cloud.r-project.org"))
 
-# or, once the repo is public and registered in the r-universe:
-# install.packages("recoverlite",
-#                  repos = c("https://heidihelena.r-universe.dev",
-#                            "https://cloud.r-project.org"))
+# or the development version straight from GitHub:
+# remotes::install_github("heidihelena/recoverlite")
 ```
+
+Not yet on CRAN.
 
 ## The workflow in one block
 
