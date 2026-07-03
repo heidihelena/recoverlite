@@ -1,0 +1,7 @@
+^LICENSE\.md$
+^SKILL\.md$
+^\.git$
+^\.gitignore$
+^\.github$
+^.*\.Rproj$
+^\.Rproj\.user$

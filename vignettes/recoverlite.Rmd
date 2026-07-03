@@ -1,0 +1,81 @@
+---
+title: "The recovery test: a pre-data feasibility protocol"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The recovery test: a pre-data feasibility protocol}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+> **Stub.** This vignette will walk through the full recovery-test
+> protocol of the companion methods paper (Andersen, 2026, working
+> draft): the two worked examples (a two-arm trial with attrition and
+> imperfect measurement; a cluster-randomized design with too few
+> clusters for reliable default inference), the crossed scenario grid,
+> the bias/drift decomposition, threshold profiles, and how to read a
+> recovery report. Until then, see `?declare_recovery` and the README.
+
+```{r setup}
+library(recoverlite)
+```
+
+## The six steps
+
+1. **Specify the target** — `target_estimand()`: the estimand, its
+   scale, and the smallest effect size of interest (SESOI), justified on
+   substantive grounds.
+2. **Declare the design** — `declare_recovery()` with a data strategy
+   (`two_arm_trial()`, `cluster_trial()`), measurement
+   (`measured_outcome()`), missingness (`attrition_model()`), and the
+   planned analysis (`planned_analysis()`) including its exact inference
+   method. Whatever is not declared is recorded as omitted: silence must
+   not imply ideality.
+3. **Specify the scenario grid** — crossed automatically from the
+   declaration: null and target effects, each under declared and
+   pessimistic nuisance assumptions, with pessimistic values chosen by an
+   evidence hierarchy and labeled with their tier. The target effect is
+   never shrunk automatically.
+4. **Simulate and diagnose** — `recovery_test()`: rejection rate /
+   power, target bias with its exact decomposition into estimator bias
+   and estimand drift, coverage, Type S/M, precision, and a classified
+   model-failure taxonomy, each with Monte Carlo uncertainty and explicit
+   inclusion rules.
+5. **Apply the verdict rule** — `verdict()`: PASS/RISK/FAIL under the
+   selected threshold profile, recomputed under the shipped strict and
+   lenient profiles, with signed margins to every threshold.
+6. **Report** — `report()`: a standalone recovery report that always
+   travels with the verdict.
+
+## A minimal run
+
+```{r example, eval = FALSE}
+design <- declare_recovery(
+  target = target_estimand(
+    estimand = "ITT mean difference at 12 weeks",
+    scale = "latent-outcome standardized mean difference",
+    sesoi = 0.40
+  ),
+  data_strategy = two_arm_trial(n_per_arm = 115),
+  measurement = measured_outcome(reliability = 0.70),
+  missingness = attrition_model(rate = 0.15, mechanism = "differential"),
+  answer_strategy = planned_analysis(
+    estimator = "linear_model",
+    formula = y_observed ~ treatment
+  )
+)
+
+result <- recovery_test(design, sims = 2000,
+                        scenarios = "confirmatory_grid", seed = 20260703)
+verdict(result)
+report(result)
+
+# Fragility curves are separate, outside the verdict:
+effect_fragility(design, sims = 500, seed = 20260703)
+nuisance_fragility(design, "attrition_rate",
+                   values = seq(0.10, 0.35, by = 0.05),
+                   sims = 500, seed = 20260703)
+```

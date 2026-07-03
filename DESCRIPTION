@@ -1,0 +1,46 @@
+Package: recoverlite
+Title: Pre-Data Recovery Tests for Planned Study Designs
+Version: 0.0.0.9001
+Authors@R:
+    person("Heidi Helena", "Andersen", , "andersenheidihelena@gmail.com",
+           role = c("aut", "cre"))
+Description: A prototype implementation of the pre-data recovery test: a
+    standardized simulation protocol for evaluating whether a planned
+    design-analysis pair can recover its target estimand before data
+    collection. Researchers declare the estimand, data-generating
+    assumptions, data strategy, missing-data process, and analysis
+    strategy; the package simulates a crossed scenario grid (null and
+    target effects, each under declared and pessimistically perturbed
+    nuisance assumptions), applies the planned analysis to each simulated
+    dataset, and reports target-null rejection, power, target bias with
+    its exact decomposition into estimator bias and estimand drift,
+    coverage, Type S and Type M errors, precision, and classified model
+    failure, each with Monte Carlo uncertainty and explicit inclusion
+    rules. A versioned threshold profile converts the diagnosands into a
+    PASS/RISK/FAIL verdict - a decision convention, not a validity
+    classification. Built on the 'DeclareDesign' framework.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends:
+    R (>= 4.1)
+Imports:
+    DeclareDesign (>= 1.0.0),
+    fabricatr,
+    randomizr,
+    stats,
+    utils
+Suggests:
+    lme4,
+    lmerTest,
+    pbkrtest,
+    simr,
+    estimatr,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+URL: https://github.com/heidihelena/recoverlite
+BugReports: https://github.com/heidihelena/recoverlite/issues

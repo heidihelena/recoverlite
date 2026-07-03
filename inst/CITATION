@@ -1,0 +1,36 @@
+citHeader("To cite recoverlite or the recovery-test protocol in publications use:")
+
+bibentry(
+  bibtype = "Unpublished",
+  title   = "Recovery before data: pre-data simulation diagnosis of planned study designs",
+  author  = person("Heidi Helena", "Andersen"),
+  year    = "2026",
+  note    = "Working paper; preprint forthcoming",
+  url     = "https://github.com/heidihelena/recoverlite",
+  textVersion = paste(
+    "Andersen, H. H. (2026). Recovery before data: pre-data simulation",
+    "diagnosis of planned study designs. Working paper.",
+    "https://github.com/heidihelena/recoverlite")
+)
+
+bibentry(
+  bibtype = "Manual",
+  title   = "recoverlite: Pre-Data Recovery Tests for Planned Study Designs",
+  author  = person("Heidi Helena", "Andersen"),
+  year    = "2026",
+  note    = sprintf("R package version %s",
+                    tryCatch(as.character(utils::packageVersion("recoverlite")),
+                             error = function(e) "0.0.0.9001")),
+  url     = "https://github.com/heidihelena/recoverlite",
+  textVersion = paste(
+    "Andersen, H. H. (2026). recoverlite: Pre-Data Recovery Tests for",
+    "Planned Study Designs. R package.",
+    "https://github.com/heidihelena/recoverlite")
+)
+
+citFooter(paste(
+  "The reusable methods sentence for preregistrations and grant",
+  "applications: 'Design feasibility was evaluated using a pre-data",
+  "recovery test, in which the planned design and analysis were simulated",
+  "under declared assumptions and pessimistic perturbations to assess",
+  "power, bias, coverage, precision, and model stability.'"))
