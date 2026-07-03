@@ -91,9 +91,10 @@ recovery_thresholds <- function(profile = c("default", "strict", "lenient",
     coverage = coverage %||% base$coverage,
     type_s = type_s %||% base$type_s,
     type_m = type_m %||% base$type_m,
-    model_failure = model_failure %||% base$model_failure,
-    drift = drift %||% base$target_bias
+    model_failure = model_failure %||% base$model_failure
   )
+  # The drift threshold tracks the resolved bias threshold unless set.
+  values$drift <- drift %||% values$target_bias
   modified <- names(base)[!mapply(identical, values[names(base)], base)]
   if (!is.null(drift) && !identical(drift, values$target_bias)) {
     modified <- union(modified, "drift")

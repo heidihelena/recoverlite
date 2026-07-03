@@ -103,3 +103,15 @@ test_that("dropout intercept calibration hits the marginal rate", {
   expect_equal(recoverlite:::calibrate_dropout_intercept(0.15, 0),
                stats::qlogis(0.15))
 })
+
+test_that("a zero rate in one arm keeps dropout probabilities finite", {
+  # regression: -Inf intercepts propagated NaN through the arm
+  # interaction term (a0 + (a1 - a0) * treatment)
+  a0 <- recoverlite:::calibrate_dropout_intercept(0, 0)
+  a1 <- recoverlite:::calibrate_dropout_intercept(0.3, -0.5)
+  expect_true(is.finite(a0))
+  p_ctrl <- stats::plogis(a0 + (a1 - a0) * 0)
+  p_trt <- stats::plogis(a0 + (a1 - a0) * 1)
+  expect_lt(p_ctrl, 1e-10)
+  expect_equal(p_trt, stats::plogis(a1))
+})

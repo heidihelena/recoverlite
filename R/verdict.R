@@ -79,10 +79,11 @@ verdict_under <- function(result, thr) {
                       result$alpha)
   })
 
+  # counts_for = NULL selects every evaluated row.
   pick <- function(counts_for, cond) {
     do.call(rbind, c(list(NULL), lapply(names(evaluations), function(nm) {
-      if (runs[[nm]]$scenario$counts_for != counts_for &&
-          !is.null(counts_for)) return(NULL)
+      if (!is.null(counts_for) &&
+          runs[[nm]]$scenario$counts_for != counts_for) return(NULL)
       ev <- evaluations[[nm]]
       ev <- ev[cond(ev), , drop = FALSE]
       if (nrow(ev)) cbind(scenario = nm, ev) else NULL

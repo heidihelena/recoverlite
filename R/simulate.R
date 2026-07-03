@@ -14,7 +14,10 @@
 # Calibrate the dropout intercept alpha so that the marginal rate
 # E_B[plogis(alpha + slope * B)] equals `rate` for B ~ N(0, 1).
 calibrate_dropout_intercept <- function(rate, slope) {
-  if (rate <= 0) return(-Inf)
+  # Finite stand-in for "never drops out": plogis(-30) ~ 1e-13, and it
+  # keeps the arm-interaction arithmetic finite when the other arm has a
+  # nonzero rate (-Inf would propagate NaN through (a1 - a0) * treatment).
+  if (rate <= 0) return(-30)
   if (slope == 0) return(stats::qlogis(rate))
   f <- function(a) {
     stats::integrate(function(b) stats::plogis(a + slope * b) * stats::dnorm(b),
@@ -314,8 +317,9 @@ fit_mi <- function(analysis, dat) {
     ests <- vars <- numeric(m)
     for (j in seq_len(m)) {
       sigma2 <- rss / stats::rchisq(1, dfr)
+      # N(0, V) draw needs the LOWER factor: Var(t(chol(V)) z) = V.
       beta <- fit0$coefficients +
-        drop(chol(sigma2 * XtX_inv) %*% rnorm(k))
+        drop(t(chol(sigma2 * XtX_inv)) %*% rnorm(k))
       y_imp <- y
       y_imp[!obs] <- drop(X[!obs, , drop = FALSE] %*% beta) +
         sqrt(sigma2) * rnorm(sum(!obs))

@@ -40,4 +40,10 @@ test_that("deviations from the shipped profile are recorded", {
 test_that("the estimation profile carries a drift threshold", {
   thr <- recovery_thresholds("estimation")
   expect_equal(thr$drift, thr$target_bias)
+  # regression: drift must track a *modified* bias threshold too
+  thr2 <- recovery_thresholds("estimation", target_bias = 0.08)
+  expect_equal(thr2$drift, 0.08)
+  # unless set explicitly
+  thr3 <- recovery_thresholds("estimation", target_bias = 0.08, drift = 0.03)
+  expect_equal(thr3$drift, 0.03)
 })
