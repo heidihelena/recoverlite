@@ -1,9 +1,10 @@
 Package: recoverlite
 Title: Pre-Data Recovery Tests for Planned Study Designs
-Version: 0.1.0
+Version: 0.2.0
 Authors@R:
     person("Heidi Helena", "Andersen", , "andersenheidihelena@gmail.com",
-           role = c("aut", "cre"))
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-5923-5865"))
 Description: A prototype implementation of the pre-data recovery test: a
     standardized simulation protocol for evaluating whether a planned
     design-analysis pair can recover its target estimand before data

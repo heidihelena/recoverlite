@@ -30,6 +30,10 @@ make_diag <- function(row_type = "target",
                  if (is_target) unstable_cond else FALSE,
                  if (is_target) unstable_cond else FALSE,
                  FALSE, FALSE, FALSE),
+    # one-sided Wilson upper bound, populated only for a zero-count Type S
+    upper = c(NA_real_, NA_real_, NA_real_, NA_real_, NA_real_,
+              if (is_target && type_s == 0) wilson_upper(0, n_sig) else NA_real_,
+              NA_real_, NA_real_, NA_real_, NA_real_),
     note = "", stringsAsFactors = FALSE
   )
 }
@@ -99,6 +103,36 @@ test_that("margin within 2 MCSE of a threshold => RISK, not PASS", {
                                           rej_mcse = 0.009)))
   expect_equal(v$verdict, "RISK")
   expect_match(v$binding, "within 2 MCSE")
+})
+
+test_that("declared failure WITHIN 2 MCSE is capped at RISK, not FAIL", {
+  # power 0.798 vs 0.80 with MCSE 0.009: fails the point estimate but the
+  # margin (-0.002) is within 2 MCSE, so the stability guard caps at RISK.
+  v <- verdict(make_result(td = make_diag("target", rejection = 0.798,
+                                          rej_mcse = 0.009)))
+  expect_equal(v$verdict, "RISK")
+  expect_match(v$binding, "caps the verdict at RISK")
+})
+
+test_that("declared failure BEYOND 2 MCSE is a stable FAIL", {
+  # power 0.78 vs 0.80 with MCSE 0.005: margin -0.02 is 4 MCSE => FAIL.
+  v <- verdict(make_result(td = make_diag("target", rejection = 0.78,
+                                          rej_mcse = 0.005)))
+  expect_equal(v$verdict, "FAIL")
+  expect_match(v$binding, "stable failure")
+})
+
+test_that("Type S zero-count is checked against the Wilson upper bound", {
+  # 0 sign flips out of 210 significant sims: point estimate 0, but the
+  # one-sided Wilson upper (~0.0127) exceeds the default 0.01 threshold, so
+  # the target row cannot clear and the verdict is capped below PASS.
+  v <- verdict(make_result(td = make_diag("target", type_s = 0,
+                                          n_sig = 210)))
+  expect_true(v$verdict %in% c("RISK", "FAIL"))
+  # with many significant sims the Wilson upper is well under 0.01 => PASS
+  v2 <- verdict(make_result(td = make_diag("target", type_s = 0,
+                                           n_sig = 1800)))
+  expect_equal(v2$verdict, "PASS")
 })
 
 test_that("overcoverage is flagged as inefficiency, not failure", {

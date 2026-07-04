@@ -18,6 +18,22 @@ mcse_prop <- function(p, n) {
   sqrt(p * (1 - p) / n)
 }
 
+# One-sided Wilson score upper bound for a proportion x / n at
+# confidence `conf` (default 0.95). Used for zero-count conditional
+# diagnosands (e.g. Type S = 0): the point estimate is 0 but the Monte
+# Carlo run has not ruled out a rate up to this bound, so the verdict
+# checks the threshold against the bound, not the point estimate
+# (manuscript, section 2.4; technical comment C). For x = 0 this reduces
+# to z^2 / (n + z^2).
+wilson_upper <- function(x, n, conf = 0.95) {
+  if (is.na(n) || n < 1) return(NA_real_)
+  z <- stats::qnorm(conf)
+  phat <- x / n
+  centre <- phat + z^2 / (2 * n)
+  halfwidth <- z * sqrt(phat * (1 - phat) / n + z^2 / (4 * n^2))
+  (centre + halfwidth) / (1 + z^2 / n)
+}
+
 mcse_mean <- function(x) {
   x <- x[is.finite(x)]
   if (length(x) < 2) return(NA_real_)
@@ -50,10 +66,10 @@ compute_diagnosands <- function(sim_df, theta, unit, thresholds, row_type,
   min_n <- thresholds$min_conditional_n
 
   row <- function(name, value, mcse, n_contributing, unstable = FALSE,
-                  note = "") {
+                  note = "", upper = NA_real_) {
     data.frame(diagnosand = name, value = value, mcse = mcse,
                n_contributing = n_contributing, unstable = unstable,
-               note = note, stringsAsFactors = FALSE)
+               note = note, upper = upper, stringsAsFactors = FALSE)
   }
 
   # Rejection rate: test size / target-null rejection under null rows,
@@ -92,17 +108,24 @@ compute_diagnosands <- function(sim_df, theta, unit, thresholds, row_type,
   if (row_type == "target") {
     if (n_sig > 0) {
       sig_idx <- which(sig)
-      ts <- mean(sign(est[sig_idx]) != sign(theta))
+      n_wrong <- sum(sign(est[sig_idx]) != sign(theta))
+      ts <- n_wrong / n_sig
       ts_mcse <- mcse_boot(function(idx) {
         s2 <- sig[idx]; e2 <- est[idx]
         if (!any(s2, na.rm = TRUE)) return(NA_real_)
         mean(sign(e2[which(s2)]) != sign(theta))
       }, n_ok)
+      # One-sided Wilson upper bound: for zero (or any) sign-flip count,
+      # the verdict checks the Type S threshold against this bound.
+      ts_upper <- wilson_upper(n_wrong, n_sig)
       d_ts <- row("type_s", ts, ts_mcse, n_sig,
                   unstable = n_sig < min_n,
+                  upper = ts_upper,
                   note = if (n_sig < min_n)
                     sprintf("only %d significant simulations (< %d); unstable",
-                            n_sig, min_n) else "bootstrap MCSE")
+                            n_sig, min_n) else
+                    sprintf("bootstrap MCSE; %d/%d sign flips, one-sided 95%% Wilson upper %.4f",
+                            n_wrong, n_sig, ts_upper))
       tm <- mean(abs(est[sig_idx])) / abs(theta)
       tm_mcse <- mcse_boot(function(idx) {
         s2 <- sig[idx]; e2 <- est[idx]

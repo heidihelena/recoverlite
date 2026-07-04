@@ -89,8 +89,18 @@ verdict_under <- function(result, thr) {
       if (nrow(ev)) cbind(scenario = nm, ev) else NULL
     })))
   }
-  failed_declared <- pick("declared",
-                          function(ev) !is.na(ev$pass) & !ev$pass)
+  # A failing margin is STABLE (resolvable at this S) only when its
+  # magnitude exceeds mcse_margin MCSEs -- the same band that governs a
+  # PASS, applied on the failing side. The stability guard takes
+  # precedence in BOTH directions (section 2.4): only a STABLE declared
+  # failure yields FAIL; a within-band declared failure is capped at
+  # RISK, exactly as a within-band pass cannot clear to PASS.
+  stable_fail <- function(ev) is.finite(ev$mcse) &
+    (-ev$margin) > thr$mcse_margin * ev$mcse
+  failed_declared_stable <- pick("declared",
+    function(ev) !is.na(ev$pass) & !ev$pass & stable_fail(ev))
+  failed_declared_within <- pick("declared",
+    function(ev) !is.na(ev$pass) & !ev$pass & !stable_fail(ev))
   failed_pess <- pick("pessimistic",
                       function(ev) !is.na(ev$pass) & !ev$pass)
   narrow <- pick(NULL, function(ev) !is.na(ev$pass) & ev$pass & !ev$stable)
@@ -104,49 +114,69 @@ verdict_under <- function(result, thr) {
             all_ev$scenario[i], all_ev$margin[i])
   } else NA_character_
 
+  nz <- function(df) !is.null(df) && nrow(df)
   notes <- character(0)
-  if (!is.null(failed_declared) && nrow(failed_declared)) {
+  if (nz(failed_declared_stable)) {
     v <- "FAIL"
     binding <- sprintf(
-      "Under declared-nuisance rows, %s.",
+      "Under declared-nuisance rows, %s (each margin exceeds %g MCSE: a stable failure).",
       paste(sprintf("%s = %.3g under '%s' violates %s",
-                    failed_declared$criterion, failed_declared$value,
-                    failed_declared$scenario, failed_declared$requirement),
-            collapse = "; "))
-  } else if (!is.null(failed_pess) && nrow(failed_pess)) {
-    v <- "RISK"
-    binding <- sprintf(
-      "Thresholds hold under declared-nuisance rows but fail under pessimistic rows: %s.",
-      paste(sprintf("%s = %.3g under '%s' violates %s", failed_pess$criterion,
-                    failed_pess$value, failed_pess$scenario,
-                    failed_pess$requirement),
-            collapse = "; "))
-  } else if (length(missing_rows)) {
-    v <- "RISK"
-    binding <- sprintf(
-      "Required scenario rows not evaluated: %s. A PASS requires all rows the '%s' profile requires; rerun with scenarios = \"%s\".",
-      paste(missing_rows, collapse = ", "), thr$profile,
-      if (estimation) "target_grid" else "confirmatory_grid")
-  } else if ((!is.null(narrow) && nrow(narrow)) ||
-             (!is.null(unstable) && nrow(unstable))) {
+                    failed_declared_stable$criterion,
+                    failed_declared_stable$value,
+                    failed_declared_stable$scenario,
+                    failed_declared_stable$requirement),
+            collapse = "; "), thr$mcse_margin)
+  } else if (nz(failed_declared_within) || nz(failed_pess) ||
+             length(missing_rows) || nz(narrow) || nz(unstable)) {
     v <- "RISK"
     parts <- character(0)
-    if (!is.null(narrow) && nrow(narrow)) {
-      parts <- c(parts, paste(sprintf(
-        "%s margin under '%s' is within %g MCSE of its threshold",
-        narrow$criterion, narrow$scenario, thr$mcse_margin),
-        collapse = "; "))
+    if (nz(failed_declared_within)) {
+      parts <- c(parts, sprintf(
+        paste0("A declared-nuisance threshold is not met, but the margin is ",
+               "within %g MCSE, so the stability guard caps the verdict at ",
+               "RISK rather than FAIL (resolve with more sims or accept as ",
+               "unresolved): %s"),
+        thr$mcse_margin,
+        paste(sprintf("%s = %.3g under '%s' violates %s",
+                      failed_declared_within$criterion,
+                      failed_declared_within$value,
+                      failed_declared_within$scenario,
+                      failed_declared_within$requirement),
+              collapse = "; ")))
     }
-    if (!is.null(unstable) && nrow(unstable)) {
-      parts <- c(parts, paste(sprintf(
-        "%s under '%s' is unstable (%d contributing simulations)",
-        unstable$criterion, unstable$scenario, unstable$n_contributing),
-        collapse = "; "))
+    if (nz(failed_pess)) {
+      parts <- c(parts, sprintf(
+        "Thresholds hold under declared-nuisance rows but fail under pessimistic rows: %s",
+        paste(sprintf("%s = %.3g under '%s' violates %s", failed_pess$criterion,
+                      failed_pess$value, failed_pess$scenario,
+                      failed_pess$requirement),
+              collapse = "; ")))
     }
-    binding <- paste0(
-      "All point estimates meet the thresholds, but simulation precision ",
-      "is insufficient to confirm a PASS: ", paste(parts, collapse = ". "),
-      ". Increase `sims`.")
+    if (length(missing_rows)) {
+      parts <- c(parts, sprintf(
+        "Required scenario rows not evaluated: %s. A PASS requires all rows the '%s' profile requires; rerun with scenarios = \"%s\"",
+        paste(missing_rows, collapse = ", "), thr$profile,
+        if (estimation) "target_grid" else "confirmatory_grid"))
+    }
+    if (nz(narrow) || nz(unstable)) {
+      sub <- character(0)
+      if (nz(narrow)) {
+        sub <- c(sub, paste(sprintf(
+          "%s margin under '%s' is within %g MCSE of its threshold",
+          narrow$criterion, narrow$scenario, thr$mcse_margin),
+          collapse = "; "))
+      }
+      if (nz(unstable)) {
+        sub <- c(sub, paste(sprintf(
+          "%s under '%s' is unstable (%d contributing simulations)",
+          unstable$criterion, unstable$scenario, unstable$n_contributing),
+          collapse = "; "))
+      }
+      parts <- c(parts, paste0(
+        "Simulation precision is insufficient to confirm a PASS: ",
+        paste(sub, collapse = ". "), ". Increase `sims`"))
+    }
+    binding <- paste0(paste(parts, collapse = ". "), ".")
   } else {
     v <- "PASS"
     binding <- NA_character_
@@ -212,13 +242,25 @@ evaluate_criteria <- function(diag, row_type, thr, alpha) {
     unstable = FALSE, note = cov_note)))
 
   if (!estimation && row_type == "target") {
+    # Type S: for a zero sign-flip count the point estimate is 0 but the
+    # run has not ruled out a higher rate, so the threshold is checked
+    # against the one-sided Wilson upper bound, not the point estimate
+    # (section 2.4; technical comment C).
+    ts_val <- g("type_s")
+    ts_upper <- if ("upper" %in% names(diag)) g("type_s", "upper") else NA_real_
+    use_ts_upper <- length(ts_val) == 1L && !is.na(ts_val) && ts_val == 0 &&
+      length(ts_upper) == 1L && is.finite(ts_upper)
+    ts_check <- if (isTRUE(use_ts_upper)) ts_upper else ts_val
+    ts_note <- if (isTRUE(use_ts_upper))
+      sprintf("threshold checked against one-sided 95%% Wilson upper %.4f (point estimate 0)",
+              ts_upper) else ""
     crit <- c(crit, list(
-      list(criterion = "type_s", value = g("type_s"),
+      list(criterion = "type_s", value = ts_val,
            mcse = g("type_s", "mcse"),
            requirement = sprintf("<= %.3g", thr$type_s),
-           margin = thr$type_s - g("type_s"),
+           margin = thr$type_s - ts_check,
            n_contributing = g("type_s", "n_contributing"),
-           unstable = isTRUE(g("type_s", "unstable")), note = ""),
+           unstable = isTRUE(g("type_s", "unstable")), note = ts_note),
       list(criterion = "type_m", value = g("type_m"),
            mcse = g("type_m", "mcse"),
            requirement = sprintf("<= %.3g", thr$type_m),
