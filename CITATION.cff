@@ -6,6 +6,7 @@ type: software
 title: "recoverlite: Pre-Data Recovery Tests for Planned Study Designs"
 version: 0.1.0
 date-released: 2026-07-04
+doi: 10.5281/zenodo.21195920
 license: Apache-2.0
 repository-code: https://github.com/heidihelena/recoverlite
 url: https://heidihelena.r-universe.dev/recoverlite

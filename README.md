@@ -3,6 +3,7 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/heidihelena/recoverlite/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/heidihelena/recoverlite/actions/workflows/R-CMD-check.yaml)
 [![recoverlite status badge](https://heidihelena.r-universe.dev/badges/recoverlite)](https://heidihelena.r-universe.dev/recoverlite)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21195920.svg)](https://doi.org/10.5281/zenodo.21195920)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.md)
 <!-- badges: end -->
 
@@ -173,6 +174,10 @@ citation("recoverlite")
 > Andersen, H. H. (2026). *Recovery before data: pre-data simulation
 > diagnosis of planned study designs.* Working paper; preprint
 > forthcoming. https://github.com/heidihelena/recoverlite
+
+Versioned releases are archived on Zenodo:
+[doi:10.5281/zenodo.21195920](https://doi.org/10.5281/zenodo.21195920)
+(concept DOI, always resolves to the latest version).
 
 The reusable methods sentence for preregistrations and grant
 applications:
