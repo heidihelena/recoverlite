@@ -1,5 +1,7 @@
 ^LICENSE\.md$
 ^SKILL\.md$
+^\.zenodo\.json$
+^CITATION\.cff$
 ^\.git$
 ^\.gitignore$
 ^\.github$

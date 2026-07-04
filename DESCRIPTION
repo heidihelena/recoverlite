@@ -1,6 +1,6 @@
 Package: recoverlite
 Title: Pre-Data Recovery Tests for Planned Study Designs
-Version: 0.0.0.9001
+Version: 0.1.0
 Authors@R:
     person("Heidi Helena", "Andersen", , "andersenheidihelena@gmail.com",
            role = c("aut", "cre"))

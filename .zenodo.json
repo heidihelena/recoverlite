@@ -1,0 +1,34 @@
+{
+  "title": "recoverlite: Pre-Data Recovery Tests for Planned Study Designs (R package)",
+  "description": "A prototype implementation of the pre-data recovery test: a standardized simulation protocol for evaluating whether a planned design-analysis pair can recover its target estimand before data collection. Researchers declare the estimand, data-generating assumptions, data strategy, missing-data process, and analysis strategy; the package simulates a crossed scenario grid (null and target effects, each under declared and pessimistically perturbed nuisance assumptions), applies the planned analysis to each simulated dataset, and reports target-null rejection, power, target bias with its exact decomposition into estimator bias and estimand drift, coverage, Type S and Type M errors, precision, and classified model failure, each with Monte Carlo uncertainty. A versioned threshold profile converts the diagnosands into a PASS/RISK/FAIL verdict. Companion software to the methods paper 'Recovery before data: pre-data simulation diagnosis of planned study designs' (Andersen, 2026, working paper). A protocol-identical Python mirror is available at https://github.com/heidihelena/recoverlite-py and on PyPI as 'recoverlite'.",
+  "creators": [
+    {
+      "name": "Andersén, Heidi Helena",
+      "orcid": "0000-0001-5923-5865"
+    }
+  ],
+  "license": "Apache-2.0",
+  "upload_type": "software",
+  "language": "eng",
+  "keywords": [
+    "study design",
+    "power analysis",
+    "simulation",
+    "estimands",
+    "estimand drift",
+    "design diagnosis",
+    "preregistration",
+    "Monte Carlo",
+    "research methods",
+    "metascience",
+    "R package",
+    "DeclareDesign"
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/heidihelena/recoverlite-py",
+      "resource_type": "software"
+    }
+  ]
+}
