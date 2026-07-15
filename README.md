@@ -9,6 +9,13 @@
 
 **Pre-data recovery tests for planned study designs.**
 
+<p align="center">
+  <img
+    src="assets/hero-workflow.svg"
+    alt="recoverlite workflow: a declared design and analysis with declared assumptions is simulated over null, target and perturbed scenarios; simulation diagnostics yield a three-way PASS, RISK or FAIL verdict under versioned thresholds — evidence about the planned design under stated assumptions, not a guarantee of results"
+    width="1200">
+</p>
+
 A planned study can be unable to support its intended inferential claim
 even when the researcher's substantive assumptions are correct. Sampling,
 measurement, missingness, assignment, and analysis may yield estimates
